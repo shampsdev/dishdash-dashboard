@@ -40,8 +40,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/dishdash-miniapp:latest
-            ${{ secrets.DOCKER_USERNAME }}/dishdash-miniapp:${{ github.event.inputs.tag_name }}
+            ${{ secrets.DOCKER_USERNAME }}/dishdash-dashboard:latest
+            ${{ secrets.DOCKER_USERNAME }}/dishdash-dashboard:${{ github.event.inputs.tag_name }}
 
       - name: Trigger watchtower to update container(s)
         shell: bash
