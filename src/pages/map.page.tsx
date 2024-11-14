@@ -1,4 +1,3 @@
-import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, Popup, TileLayer, ZoomControl } from 'react-leaflet';
 import { useDashboardStore } from '@/shared/places.store';
 import { useNavigate } from 'react-router-dom';
