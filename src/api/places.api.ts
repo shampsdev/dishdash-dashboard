@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Place } from '@/interfaces/place.interface';
 
-const API_URL = 'https://dishdash.ru';
+const API_URL = 'https://dev.dishdash.ru';
 
 export const fetchPlaces = async (): Promise<Place[] | undefined> => {
   try {

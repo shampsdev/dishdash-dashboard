@@ -1,16 +1,8 @@
-import { Tag } from "@/interfaces/place.interface";
-import { useEffect, useState } from "react";
-import { fetchTags } from "@/api/tags.api";
 import { Plus, X } from "lucide-react";
+import { useDashboardStore } from "@/shared/places.store";
 
 export const TagsPage = () => {
-    const [tags, setTags] = useState<Tag[]>([]);
-
-    useEffect(() => {
-        fetchTags().then((x) => {
-            if (x) setTags(x);
-        });
-    }, []);
+    const { tags } = useDashboardStore();
 
     return (
         <div className="w-full h-full flex">
