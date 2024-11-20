@@ -1,9 +1,9 @@
+import { usePlaces } from '@/shared/hooks/usePlaces';
 import { MapContainer, Marker, Popup, TileLayer, ZoomControl } from 'react-leaflet';
-import { useDashboardStore } from '@/shared/places.store';
 import { useNavigate } from 'react-router-dom';
 
 export const MapPage = () => {
-    const { places } = useDashboardStore();
+    const { data: places } = usePlaces();
 
     const naviagte = useNavigate();
 
@@ -18,7 +18,7 @@ export const MapPage = () => {
                 <TileLayer
                     url="https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWlrZWRlZ2VvZnJveSIsImEiOiJja3ZiOGQwc3I0N29uMnVxd2xlbGVyZGQzIn0.11XK5mqIzfLBTfNTYOGDgw"
                 />
-                {places.map((place) => (
+                {places?.map((place) => (
                     <Marker position={[place.location.lat, place.location.lon]}>
                         <Popup>
                             {place.title}

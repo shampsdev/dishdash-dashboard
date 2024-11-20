@@ -1,24 +1,19 @@
-import { useDashboardStore } from "@/shared/places.store";
-import { Command, Inbox, Map, Settings2, Tag } from "lucide-react"
+import { useDashboardStore } from "@/shared/stores/places.store";
+import { Command, Inbox, Map, MapPinPlus, Settings2, Tag } from "lucide-react"
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom"
-import { fetchPlaces } from "@/api/places.api";
-import { fetchTags } from "@/api/tags.api";
+import { fetchTags } from "@/shared/api/tags.api";
 
 export const Sidebar = () => {
     const navigate = useNavigate();
 
-    const { setPlaces, setTags } = useDashboardStore();
+    const { setTags } = useDashboardStore();
 
     useEffect(() => {
-        fetchPlaces().then((x) => {
-            if (x) setPlaces(x);
-        });
-
         fetchTags().then((x) => {
             if (x) setTags(x);
         });
-    }, [setPlaces, setTags]);
+    }, [setTags]);
 
     return (
 
@@ -32,6 +27,9 @@ export const Sidebar = () => {
                 </div>
                 <div onClick={() => navigate('/tags')} className="h-8 w-8 hover:bg-gray-100 cursor-pointer p-2 rounded-md flex items-center justify-center">
                     <Tag />
+                </div>
+                <div onClick={() => navigate('/add-place')} className="h-8 w-8 hover:bg-gray-100 cursor-pointer p-2 rounded-md flex items-center justify-center">
+                    <MapPinPlus />
                 </div>
                 <div onClick={() => navigate('/map')} className="h-8 w-8 hover:bg-gray-100 cursor-pointer p-2 rounded-md flex items-center justify-center">
                     <Map />

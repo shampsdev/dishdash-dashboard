@@ -1,5 +1,5 @@
+import { useDashboardStore } from "@/shared/stores/places.store";
 import { Plus, X } from "lucide-react";
-import { useDashboardStore } from "@/shared/places.store";
 
 export const TagsPage = () => {
     const { tags } = useDashboardStore();
