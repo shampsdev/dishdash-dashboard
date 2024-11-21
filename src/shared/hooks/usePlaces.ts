@@ -26,9 +26,9 @@ export const usePlaces = () => {
 
     return {
         ...fetchPlacesQuery,
-        savePlace: savePlaceMutation.mutate,
+        savePlace: savePlaceMutation,
         updatePlace: updatePlaceMutation.mutate,
-        isUpdating: updatePlaceMutation.isPending,
+        isUpdating: updatePlaceMutation.isPending || savePlaceMutation.isPending,
     };
 };
 

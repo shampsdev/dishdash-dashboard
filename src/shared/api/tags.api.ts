@@ -1,7 +1,7 @@
 import { Tag } from '@/interfaces/place.interface';
 import axios from 'axios';
 
-const API_URL = 'https://dev.dishdash.ru';
+const API_URL = 'https://dishdash.ru';
 
 export const fetchTags = async (): Promise<Tag[] | undefined> => {
   try {

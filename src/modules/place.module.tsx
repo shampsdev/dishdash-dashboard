@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Place, Tag } from "@/interfaces/place.interface";
-import toast from "react-hot-toast";
 import { Plus, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,24 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
-import { usePlaces } from "@/shared/hooks/usePlaces";
 
-export const PlaceModule = ({ inputPlace }: { inputPlace: Place }) => {
+export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave: (place: Place) => void; }) => {
     const [place, setPlace] = useState<Place>(inputPlace);
-    const { updatePlace } = usePlaces();
 
     useEffect(() => {
         setPlace(inputPlace);
     }, [inputPlace]);
 
     const { tags } = useDashboardStore();
-
-    const handleTagChange = (selectedTags: Tag[]) => {
-        if (place) {
-            const newTags = tags.filter(tag => selectedTags.includes(tag));
-            setPlace({ ...place, tags: newTags });
-        }
-    };
 
     const handleInputChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -52,46 +42,62 @@ export const PlaceModule = ({ inputPlace }: { inputPlace: Place }) => {
         if (newPhotoUrl) {
             setPlace({
                 ...place,
-                image: [...place.image, newPhotoUrl],
+                images: [...place.images, newPhotoUrl],
             });
         }
     };
 
     const handleRemovePhoto = (index: number) => {
         if (!place) return;
-        const newImages = place.image.filter((_, i) => i !== index);
-        setPlace({ ...place, image: newImages });
+        const newImages = place.images.filter((_, i) => i !== index);
+        setPlace({ ...place, images: newImages });
+    };
+
+    const toggleTag = (tag: Tag) => {
+        const isTagSelected = place.tags.some(t => t.id === tag.id);
+        const updatedTags = isTagSelected
+            ? place.tags.filter(t => t.id !== tag.id)
+            : [...place.tags, tag];
+        handleTagChange(updatedTags);
+    };
+
+    const handleTagChange = (updatedTags: Tag[]) => {
+        setPlace(prev => ({
+            ...prev,
+            tags: updatedTags,
+        }));
     };
 
     const handleSave = useCallback(() => {
-        if (place) {
-            updatePlace(place);
-            toast.success("Place updated");
-        }
-    }, [place, updatePlace]);
+        onSave(place);
+    }, [place, onSave]);
 
     return place !== null ? (
         <form className="flex gap-5 flex-col h-full">
-            <div className="flex gap-5 text-gray-300">
-                {place.image.map((img, index) => (
-                    <div
-                        key={`${index}_picture`}
-                        className="group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
-                    >
-                        <img className="h-full w-full object-cover" src={img} alt="Place" />
+            <div className="w-full h-[600px] overflow-x-scroll overflow-y-hidden">
+                <div className="whitespace-nowrap h-fit space-x-5 text-gray-300">
+                    {place.images.map((img, index) => (
                         <div
-                            className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
-                            onClick={() => handleRemovePhoto(index)}
+                            key={`${index}_picture`}
+                            className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
                         >
-                            <X />
+                            <img className="h-full w-full object-cover" src={img} alt="Place" />
+                            <div
+                                className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
+                                onClick={() => handleRemovePhoto(index)}
+                            >
+                                <X />
+                            </div>
+                        </div>
+                    ))}
+                    <div
+                        className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
+                        onClick={handleAddPhoto}
+                    >
+                        <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
+                            <Plus />
                         </div>
                     </div>
-                ))}
-                <div
-                    className="flex items-center justify-center aspect-[21/30] bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
-                    onClick={handleAddPhoto}
-                >
-                    <Plus />
                 </div>
             </div>
             <div className="h-full pl-1 w-full space-y-4 overflow-scroll">
@@ -168,9 +174,7 @@ export const PlaceModule = ({ inputPlace }: { inputPlace: Place }) => {
                                 <TagComponent
                                     key={`${tag.id}_${index}_tag`}
                                     onClick={() => {
-                                        handleTagChange(
-                                            place.tags.filter(x => x.id !== tag.id)
-                                        );
+                                        toggleTag(tag)
                                     }}
                                     tag={tag}
                                 />
@@ -186,7 +190,7 @@ export const PlaceModule = ({ inputPlace }: { inputPlace: Place }) => {
                                     <TagComponent
                                         key={`${tag.id}_${index}_tag`}
                                         onClick={() => {
-                                            handleTagChange([tag, ...place.tags]);
+                                            toggleTag(tag)
                                         }}
                                         tag={tag}
                                     />

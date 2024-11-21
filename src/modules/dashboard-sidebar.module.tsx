@@ -15,7 +15,7 @@ export default function DashboardSidebar() {
 
     return (
         <div className="w-full h-full flex">
-            <div className="flex flex-col w-[400px] border-gray-100 border-r">
+            <div className="flex flex-col w-[350px] border-gray-100 border-r">
                 <div className="p-5 pt-4 space-y-5 border-gray-100 border-b">
                     <h1 className="text-xl">All Places</h1>
                     <Input
@@ -24,7 +24,7 @@ export default function DashboardSidebar() {
                         onChange={(e) => setFilter(e.target.value)}
                     />
                 </div>
-                <div className='h-full divide-gray-100 w-fit overflow-y-scroll'>
+                <div className='h-full divide-gray-100 w-full overflow-y-scroll'>
                     {filteredPlaces?.map((x, index) => (
                         <div key={`${x.id}_${index}`} onClick={() => {
                             navigate(`${x.id}`);

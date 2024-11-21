@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Place } from '@/interfaces/place.interface';
 import { useSettingsStore } from '../stores/settings.store';
 
-const API_URL = 'https://dev.dishdash.ru';
+const API_URL = 'https://dishdash.ru';
 
 export const fetchPlaces = async (): Promise<Place[]> => {
     const response = await axios.get<Place[]>(`${API_URL}/api/v1/places`);
@@ -17,7 +17,8 @@ export const updatePlace = async (place: Place): Promise<Place> => {
             `${API_URL}/api/v1/places`,
             {
                 ...place,
-                images: place.image,
+                // @ts-expect-error shitty conversion to int
+                priceMin: parseInt(place.priceAvg),
                 tags: place.tags.flatMap((x) => x.id),
             },
             {
@@ -49,6 +50,7 @@ export const savePlace = async (place: Place): Promise<Place> => {
             `${API_URL}/api/v1/places`,
             {
                 ...place,
+                priceMin: place.priceAvg,
                 tags: place.tags.flatMap((x) => x.id),
             },
             {

@@ -13,7 +13,7 @@ export interface Place {
   address: string;
   description: string;
   id: number;
-  image: string[];
+  images: string[];
   location: Location;
   priceAvg: number;
   reviewCount: number;
