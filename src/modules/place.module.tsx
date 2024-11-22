@@ -74,7 +74,7 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
 
     return place !== null ? (
         <form className="flex gap-5 flex-col h-full">
-            <div className="w-full h-[600px] overflow-x-scroll overflow-y-hidden">
+            <div className="w-full h-[600px]">
                 <div className="whitespace-nowrap h-fit space-x-5 text-gray-300">
                     {place.images.map((img, index) => (
                         <div
@@ -100,7 +100,7 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
                     </div>
                 </div>
             </div>
-            <div className="h-full pl-1 w-full space-y-4 overflow-scroll">
+            <div className="h-full pl-1 w-full space-y-4">
                 <div className="flex gap-5">
                     <div className="w-full space-y-4">
                         <div>
