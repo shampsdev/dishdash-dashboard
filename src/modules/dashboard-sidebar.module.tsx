@@ -24,7 +24,7 @@ export default function DashboardSidebar() {
                         onChange={(e) => setFilter(e.target.value)}
                     />
                 </div>
-                <div className='h-full divide-gray-100 w-full overflow-y-scroll'>
+                <div className='h-full divide-gray-100 w-full overflow-y-scroll no-scrollbar'>
                     {filteredPlaces?.map((x, index) => (
                         <div key={`${x.id}_${index}`} onClick={() => {
                             navigate(`${x.id}`);
