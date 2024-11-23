@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { Place, Tag } from "@/interfaces/place.interface";
 import { Plus, X } from "lucide-react";
@@ -9,7 +10,13 @@ import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
 
-export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave: (place: Place) => void; }) => {
+export const PlaceModule = ({
+    inputPlace,
+    onSave,
+}: {
+    inputPlace: Place;
+    onSave: (place: Place) => void;
+}) => {
     const [place, setPlace] = useState<Place>(inputPlace);
 
     useEffect(() => {
@@ -54,15 +61,15 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
     };
 
     const toggleTag = (tag: Tag) => {
-        const isTagSelected = place.tags.some(t => t.id === tag.id);
+        const isTagSelected = place.tags.some((t) => t.id === tag.id);
         const updatedTags = isTagSelected
-            ? place.tags.filter(t => t.id !== tag.id)
+            ? place.tags.filter((t) => t.id !== tag.id)
             : [...place.tags, tag];
         handleTagChange(updatedTags);
     };
 
     const handleTagChange = (updatedTags: Tag[]) => {
-        setPlace(prev => ({
+        setPlace((prev) => ({
             ...prev,
             tags: updatedTags,
         }));
@@ -72,33 +79,76 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
         onSave(place);
     }, [place, onSave]);
 
+    const handleDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+
+        const reorderedImages = Array.from(place.images);
+        const [movedImage] = reorderedImages.splice(result.source.index, 1);
+        reorderedImages.splice(result.destination.index, 0, movedImage);
+
+        setPlace((prev) => ({ ...prev, images: reorderedImages }));
+
+        console.log(place);
+    };
+
     return place !== null ? (
         <form className="flex gap-5 flex-col h-full">
             <div className="w-full h-[600px]">
-                <div className="whitespace-nowrap h-fit space-x-5 text-gray-300">
-                    {place.images.map((img, index) => (
-                        <div
-                            key={`${index}_picture`}
-                            className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
-                        >
-                            <img className="h-full w-full object-cover" src={img} alt="Place" />
-                            <div
-                                className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
-                                onClick={() => handleRemovePhoto(index)}
-                            >
-                                <X />
-                            </div>
-                        </div>
-                    ))}
-                    <div
-                        className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
-                        onClick={handleAddPhoto}
+                <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable
+                        droppableId="images"
+                        direction="horizontal"
+                        type="image"
                     >
-                        <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
-                            <Plus />
-                        </div>
-                    </div>
-                </div>
+                        {(provided) => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="whitespace-nowrap h-fit space-x-5 text-gray-300 flex"
+                            >
+                                {place.images.map((img, index) => (
+                                    <Draggable
+                                        key={`${index}_picture`}
+                                        draggableId={`${index}_picture`}
+                                        index={index}
+                                    >
+                                        {(provided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
+                                            >
+                                                <img
+                                                    className="h-full w-full object-cover"
+                                                    src={img}
+                                                    alt="Place"
+                                                />
+                                                <div
+                                                    className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
+                                                    onClick={() =>
+                                                        handleRemovePhoto(index)
+                                                    }
+                                                >
+                                                    <X />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                                <div
+                                    className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
+                                    onClick={handleAddPhoto}
+                                >
+                                    <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
+                                        <Plus />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
             </div>
             <div className="h-full pl-1 w-full space-y-4">
                 <div className="flex gap-5">
@@ -174,7 +224,7 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
                                 <TagComponent
                                     key={`${tag.id}_${index}_tag`}
                                     onClick={() => {
-                                        toggleTag(tag)
+                                        toggleTag(tag);
                                     }}
                                     tag={tag}
                                 />
@@ -183,14 +233,16 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
                         <div className="flex flex-wrap gap-5 pl-5">
                             {tags
                                 .filter(
-                                    x =>
-                                        !place.tags.flatMap(y => y.id).includes(x.id)
+                                    (x) =>
+                                        !place.tags
+                                            .flatMap((y) => y.id)
+                                            .includes(x.id)
                                 )
                                 .map((tag, index) => (
                                     <TagComponent
                                         key={`${tag.id}_${index}_tag`}
                                         onClick={() => {
-                                            toggleTag(tag)
+                                            toggleTag(tag);
                                         }}
                                         tag={tag}
                                     />
@@ -200,7 +252,9 @@ export const PlaceModule = ({ inputPlace, onSave }: { inputPlace: Place, onSave:
                 </div>
             </div>
             <div className="flex justify-end">
-                <Button type="button" onClick={handleSave}>Save</Button>
+                <Button type="button" onClick={handleSave}>
+                    Save
+                </Button>
             </div>
         </form>
     ) : (
