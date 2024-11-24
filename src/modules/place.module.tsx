@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
+import { uploadImageByUrl } from "@/shared/api/parse.api";
 
 export const PlaceModule = ({
     inputPlace,
@@ -43,14 +44,17 @@ export const PlaceModule = ({
         [place]
     );
 
-    const handleAddPhoto = () => {
+    const handleAddPhoto = async () => {
         if (!place) return;
-        const newPhotoUrl = prompt("Enter the URL of the new photo:");
-        if (newPhotoUrl) {
-            setPlace({
-                ...place,
-                images: [...place.images, newPhotoUrl],
-            });
+        const rawPhotoUrl = prompt("Enter the URL of the new photo:");
+        if (rawPhotoUrl) {
+            const newPhotoUrl = await uploadImageByUrl(rawPhotoUrl);
+            if (newPhotoUrl.url) {
+                setPlace({
+                    ...place,
+                    images: [...place.images, newPhotoUrl.url],
+                });
+            }
         }
     };
 
