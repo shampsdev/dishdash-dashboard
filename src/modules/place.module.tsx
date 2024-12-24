@@ -26,7 +26,7 @@ export const PlaceModule = ({
   const [place, setPlace] = useState<Place>(inputPlace);
 
   useEffect(() => {
-    setPlace(inputPlace);
+    if (inputPlace.title !== "") setPlace(inputPlace);
   }, [inputPlace]);
 
   const { tags } = useDashboardStore();
