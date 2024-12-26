@@ -15,6 +15,7 @@ import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
 import { uploadImageByUrl } from "@/shared/api/parse.api";
+import { deletePlace } from "@/shared/api/places.api";
 
 export const PlaceModule = ({
   inputPlace,
@@ -91,6 +92,9 @@ export const PlaceModule = ({
     onSave(place);
   }, [place, onSave]);
 
+  const handleDelete = () => {
+    deletePlace(place);
+  };
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -253,6 +257,13 @@ export const PlaceModule = ({
         </div>
       </div>
       <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={handleDelete}
+          className="bg-red-800 mx-10"
+        >
+          Delete
+        </Button>
         <Button type="button" onClick={handleSave}>
           Save
         </Button>

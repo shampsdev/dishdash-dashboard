@@ -72,3 +72,31 @@ export const savePlace = async (place: Place): Promise<Place> => {
     throw err;
   }
 };
+
+export const deletePlace = async (place: Place): Promise<Place> => {
+  const api_key = useSettingsStore.getState().api_key;
+
+  try {
+    const response = await axios.delete<Place>(
+      `${API_URL}/api/v1/places/${place.id}`,
+      {
+        headers: {
+          "X-API-Token": api_key,
+        },
+      }
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      console.error(`Error deleting place: ${err.message}`, {
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+    } else {
+      console.error("Unexpected error deleting place:", err);
+    }
+
+    throw err;
+  }
+};
