@@ -256,7 +256,7 @@ export const PlaceModule = ({
           </div>
         </div>
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-start absolute bottom-5 right-5">
         <Button
           type="button"
           onClick={handleDelete}
