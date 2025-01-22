@@ -50,7 +50,7 @@ jobs:
           title: "Docker image sent: ${{ env.COMMIT_SHORT_SHA }}"
           message: |
             ✅ Docker image for commit: ${{ github.sha }} has been successfully built and pushed to Docker Hub.  
-            Branches/tags:: dev, ${{ env.COMMIT_SHORT_SHA }}.
+            Branches/tags: dev, ${{ env.COMMIT_SHORT_SHA }}.
             
             Repository: ${{ github.repository }}
             Commit url: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
@@ -80,7 +80,7 @@ jobs:
             Commit: ${{ github.sha }}
             Repository: ${{ github.repository }}
             
-              Link to commit: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+            Link to commit: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
 
       - name: Shoutrrr - fail
         if: ${{ failure() }}
