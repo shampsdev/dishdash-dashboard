@@ -1,13 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { Textarea } from "@/components/ui/textarea";
-
 import { Place } from "@/interfaces/place.interface";
 import { PlaceModule } from "@/modules/place.module";
 import { parsePlace } from "@/shared/api/parse.api";
 import { usePlaces } from "@/shared/hooks/usePlaces";
-
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -30,13 +27,13 @@ export const AddPlacePage = () => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
     const navigate = useNavigate();
     const { savePlace } = usePlaces();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUrl(e.target.value);
     };
-
 
     const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setJsonInput(e.target.value);
@@ -88,6 +85,7 @@ export const AddPlacePage = () => {
                         value={url}
                         onChange={handleInputChange}
                         placeholder="Enter the URL..."
+                    />
                     <Button variant="outline" onClick={handleParseUrl} disabled={loading}>
                         {loading ? "Parsing..." : "Parse URL"}
                     </Button>
@@ -102,12 +100,12 @@ export const AddPlacePage = () => {
                     />
                     <Button variant="outline" onClick={handleParseJson}>
                         Parse JSON
-
                     </Button>
                 </div>
             </div>
-       
-                      {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+
+
+            {error && <p className="text-red-500 text-center mt-2">{error}</p>}
 
             <PlaceModule
                 inputPlace={{ ...parsedPlace, id: 0 }}
@@ -116,4 +114,3 @@ export const AddPlacePage = () => {
         </div>
     );
 };
-

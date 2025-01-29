@@ -26,6 +26,7 @@ export const fetchPlaces = async (): Promise<Place[]> => {
 
     throw err;
   }
+};
 
 export const updatePlace = async (place: Place): Promise<Place> => {
   const api_key = useSettingsStore.getState().api_key;
@@ -118,4 +119,3 @@ export const deletePlace = async (place: Place): Promise<Place> => {
     throw err;
   }
 };
-
