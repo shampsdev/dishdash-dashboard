@@ -18,3 +18,23 @@ export const parsePlace = async (url: string) => {
 
     return response.data;
 }
+
+export const uploadImageByUrl = async (url: string) => {
+    const api_key = useSettingsStore.getState().api_key;
+
+    const response = await axios.post<{ url: string }>(
+        `${API_URL}/api/upload/`,
+        null,
+        {
+            params: {
+                url,
+            },
+            headers: {
+                'api-key': api_key,
+            },
+        }
+    );
+
+    return response.data;
+}
+

@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
+
 import { Place, Tag } from "@/interfaces/place.interface";
 import { Plus, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -8,6 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
+
+import { uploadImageByUrl } from "@/shared/api/parse.api";
+import { deletePlace } from "@/shared/api/places.api";
 
 export const PlaceModule = ({
   inputPlace,
@@ -19,7 +29,7 @@ export const PlaceModule = ({
   const [place, setPlace] = useState<Place>(inputPlace);
 
   useEffect(() => {
-    setPlace(inputPlace);
+    if (inputPlace.title !== "") setPlace(inputPlace);
   }, [inputPlace]);
 
   const { tags } = useDashboardStore();
@@ -42,14 +52,17 @@ export const PlaceModule = ({
     [place]
   );
 
-  const handleAddPhoto = () => {
+  const handleAddPhoto = async () => {
     if (!place) return;
-    const newPhotoUrl = prompt("Enter the URL of the new photo:");
-    if (newPhotoUrl) {
-      setPlace({
-        ...place,
-        images: [...place.images, newPhotoUrl],
-      });
+    const rawPhotoUrl = prompt("Enter the URL of the new photo:");
+    if (rawPhotoUrl) {
+      const newPhotoUrl = await uploadImageByUrl(rawPhotoUrl);
+      if (newPhotoUrl.url) {
+        setPlace({
+          ...place,
+          images: [...place.images, newPhotoUrl.url],
+        });
+      }
     }
   };
 
@@ -75,47 +88,81 @@ export const PlaceModule = ({
   };
 
   const handleSave = useCallback(() => {
-    place.location.lat = Number(place.location.lat);
     place.location.lon = Number(place.location.lon);
-
+    place.location.lat = Number(place.location.lat);
     place.priceAvg = Number(place.priceAvg);
-
     onSave(place);
   }, [place, onSave]);
 
+  const handleDelete = () => {
+    deletePlace(place);
+  };
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const reorderedImages = Array.from(place.images);
+    const [movedImage] = reorderedImages.splice(result.source.index, 1);
+    reorderedImages.splice(result.destination.index, 0, movedImage);
+
+    setPlace((prev) => ({ ...prev, images: reorderedImages }));
+
+    console.log(place);
+  };
+
   return place !== null ? (
     <form className="flex gap-5 flex-col h-full">
-      <div className="w-full h-[600px] overflow-x-scroll overflow-y-hidden">
-        <div className="whitespace-nowrap h-fit space-x-5 text-gray-300">
-          {place.images.map((img, index) => (
-            <div
-              key={`${index}_picture`}
-              className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
-            >
-              <img
-                className="h-full w-full object-cover"
-                src={img}
-                alt="Place"
-              />
+      <div className="w-full h-[600px]">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="images" direction="horizontal" type="image">
+            {(provided) => (
               <div
-                className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
-                onClick={() => handleRemovePhoto(index)}
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="whitespace-nowrap h-fit space-x-5 text-gray-300 flex"
               >
-                <X />
+                {place.images.map((img, index) => (
+                  <Draggable
+                    key={`${index}_picture`}
+                    draggableId={`${index}_picture`}
+                    index={index}
+                  >
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
+                      >
+                        <img
+                          className="h-full w-full object-cover"
+                          src={img}
+                          alt="Place"
+                        />
+                        <div
+                          className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
+                          onClick={() => handleRemovePhoto(index)}
+                        >
+                          <X />
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+                <div
+                  className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
+                  onClick={handleAddPhoto}
+                >
+                  <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
+                    <Plus />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-          <div
-            className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
-            onClick={handleAddPhoto}
-          >
-            <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
-              <Plus />
-            </div>
-          </div>
-        </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
-      <div className="h-full pl-1 w-full space-y-4 overflow-scroll">
+      <div className="h-full pl-1 w-full space-y-4">
         <div className="flex gap-5">
           <div className="w-full space-y-4">
             <div>
@@ -211,7 +258,16 @@ export const PlaceModule = ({
           </div>
         </div>
       </div>
-      <div className="flex justify-end">
+
+      <div className="flex justify-start absolute bottom-5 right-5">
+        <Button
+          type="button"
+          onClick={handleDelete}
+          className="bg-red-800 mx-10"
+        >
+          Delete
+        </Button>
+
         <Button type="button" onClick={handleSave}>
           Save
         </Button>

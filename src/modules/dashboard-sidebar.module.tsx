@@ -24,13 +24,13 @@ export default function DashboardSidebar() {
                         onChange={(e) => setFilter(e.target.value)}
                     />
                 </div>
-                <div className='h-full divide-gray-100 w-full overflow-y-scroll'>
+                <div className='h-full divide-gray-100 w-full overflow-y-scroll no-scrollbar'>
                     {filteredPlaces?.map((x, index) => (
                         <div key={`${x.id}_${index}`} onClick={() => {
                             navigate(`${x.id}`);
                         }} className="cursor-pointer px-3 py-2 h-24 hover:bg-gray-100 w-full">
                             <p>
-                                {x.title}
+                                {x.title} <span className="text-muted-foreground text-xs">{x.id}</span>
                             </p>
                             <p className="text-muted-foreground line-clamp-2 text-sm">
                                 {x.address}
