@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+
 import {
   DragDropContext,
   Droppable,
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagComponent } from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
+
 import { uploadImageByUrl } from "@/shared/api/parse.api";
 import { deletePlace } from "@/shared/api/places.api";
 
@@ -256,6 +258,7 @@ export const PlaceModule = ({
           </div>
         </div>
       </div>
+
       <div className="flex justify-start absolute bottom-5 right-5">
         <Button
           type="button"
@@ -264,6 +267,7 @@ export const PlaceModule = ({
         >
           Delete
         </Button>
+
         <Button type="button" onClick={handleSave}>
           Save
         </Button>

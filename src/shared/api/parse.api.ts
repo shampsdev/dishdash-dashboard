@@ -37,3 +37,4 @@ export const uploadImageByUrl = async (url: string) => {
 
     return response.data;
 }
+
