@@ -13,7 +13,6 @@ jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     needs: [ci-tests]
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name != '')
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -21,6 +20,12 @@ jobs:
       attestations: write
       id-token: write
     steps:
+      - name: Fail if not on main branch or release tag
+        if: github.ref != 'refs/heads/main' && github.event.release.tag_name == ''
+        run: |
+          echo "This workflow should only run on the 'main' branch or for a release with a tag name."
+          exit 1
+          
       - name: Check out the repo
         uses: actions/checkout@v4
 
