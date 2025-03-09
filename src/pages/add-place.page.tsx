@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Place } from '@/interfaces/place.interface';
 import { PlaceModule } from '@/modules/place.module';
 import { parsePlace } from '@/shared/api/parse.api';
@@ -11,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 export const AddPlacePage = () => {
   const [url, setUrl] = useState('');
-  const [jsonInput, setJsonInput] = useState('');
   const [parsedPlace, setParsedPlace] = useState<Omit<Place, 'id'>>({
     address: '',
     description: '',
@@ -37,10 +35,6 @@ export const AddPlacePage = () => {
     setUrl(e.target.value);
   };
 
-  const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setJsonInput(e.target.value);
-  };
-
   const handleParseUrl = async () => {
     setError('');
     if (!url) {
@@ -56,19 +50,6 @@ export const AddPlacePage = () => {
       setError('Failed to parse the place. Please check the URL or API key.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleParseJson = () => {
-    setError('');
-    try {
-      const place = JSON.parse(jsonInput);
-      if (typeof place !== 'object' || !place.title) {
-        throw new Error('Invalid JSON structure.');
-      }
-      setParsedPlace(place);
-    } catch {
-      setError('Invalid JSON format.');
     }
   };
 
@@ -90,18 +71,6 @@ export const AddPlacePage = () => {
           />
           <Button variant='outline' onClick={handleParseUrl} disabled={loading}>
             {loading ? 'Parsing...' : 'Parse URL'}
-          </Button>
-        </div>
-        <div className='w-full gap-4 justify-center flex'>
-          <Textarea
-            className='w-full p-3 border rounded-md'
-            rows={4}
-            value={jsonInput}
-            onChange={handleJsonChange}
-            placeholder='Paste JSON here...'
-          />
-          <Button variant='outline' onClick={handleParseJson}>
-            Parse JSON
           </Button>
         </div>
       </div>

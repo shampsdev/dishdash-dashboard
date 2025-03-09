@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { useDashboardStore } from "@/shared/stores/places.store";
 
 import { uploadImageByUrl } from "@/shared/api/parse.api";
-import { deletePlace } from "@/shared/api/places.api";
 
 export const PlaceModule = ({
   inputPlace,
@@ -94,9 +93,6 @@ export const PlaceModule = ({
     onSave(place);
   }, [place, onSave]);
 
-  const handleDelete = () => {
-    deletePlace(place);
-  };
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -111,7 +107,7 @@ export const PlaceModule = ({
 
     return place !== null ? (
         <form className="p-5 flex gap-5 flex-col h-full overflow-scroll no-scrollbar">
-            <div className="w-full h-[600px]">
+            <div className="h-[600px]">
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable
                         droppableId="images"
@@ -122,7 +118,7 @@ export const PlaceModule = ({
                             <div
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
-                                className="whitespace-nowrap h-fit space-x-5 text-gray-300 flex"
+                                className="whitespace-nowrap h-fit space-x-5 text-primary flex"
                             >
                                 {place.images.map((img, index) => (
                                     <Draggable
@@ -135,7 +131,7 @@ export const PlaceModule = ({
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className="inline-block group aspect-[21/30] bg-gray-100 relative rounded-xl overflow-hidden h-[300px]"
+                                                className="inline-block group aspect-[21/30] bg-secondary relative rounded-xl overflow-hidden h-[300px]"
                                             >
                                                 <img
                                                     className="h-full w-full object-cover"
@@ -143,7 +139,7 @@ export const PlaceModule = ({
                                                     alt="Place"
                                                 />
                                                 <div
-                                                    className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-gray-100 rounded-full"
+                                                    className="cursor-pointer h-6 w-6 p-1 group-hover:flex hidden justify-center items-center absolute bottom-2 right-2 bg-background rounded-full"
                                                     onClick={() =>
                                                         handleRemovePhoto(index)
                                                     }
@@ -156,11 +152,11 @@ export const PlaceModule = ({
                                 ))}
                                 {provided.placeholder}
                                 <div
-                                    className="inline-block bg-gray-100 rounded-xl overflow-hidden h-[300px] cursor-pointer"
+                                    className="inline-block bg-secondary rounded-xl overflow-hidden h-[300px] cursor-pointer"
                                     onClick={handleAddPhoto}
                                 >
                                     <div className="flex items-center justify-center h-full w-full aspect-[21/30]">
-                                        <Plus />
+                                        <Plus className='text-primary' />
                                     </div>
                                 </div>
                             </div>
@@ -237,7 +233,7 @@ export const PlaceModule = ({
                 <div>
                     <Label htmlFor="tags">Tags</Label>
                     <div className="flex pt-2 divide-black">
-                        <div className="flex flex-wrap gap-5 border-r pr-5 border-r-gray-300">
+                        <div className="flex flex-wrap gap-5 border-r pr-5 border-r-secondary">
                             {place.tags.map((tag, index) => (
                                 <TagComponent
                                     key={`${tag.id}_${index}_tag`}
