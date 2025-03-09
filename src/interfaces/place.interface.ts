@@ -22,4 +22,6 @@ export interface Place {
   tags: Tag[];
   title: string;
   updatedAt: string;
+  boost: number | null;
+  boostRadius: number | null;
 }

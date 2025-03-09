@@ -39,7 +39,7 @@ export default function DashboardSidebar() {
                     ))}
                 </div>
             </div>
-            <div className="w-full m-5">
+            <div className="w-full">
                 <Outlet />
             </div>
         </div>
