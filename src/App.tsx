@@ -7,7 +7,7 @@ import { MapPage } from './pages/map.page';
 import { Toaster } from 'react-hot-toast';
 import { SettingsPage } from './pages/settings.page';
 import DashboardSidebar from './modules/dashboard-sidebar.module';
-import { DashboardPage } from './pages/dashboard.page';
+import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AddPlacePage } from './pages/add-place.page';
 import { DarkModeProvider } from './shared/providers/dark-mode.provider';

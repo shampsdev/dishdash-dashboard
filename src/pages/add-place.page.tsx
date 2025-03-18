@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Place } from '@/interfaces/place.interface';
-import { PlaceModule } from '@/modules/place.module';
+import { PlacePage } from '@/pages/dashboard/place.page';
 import { parsePlace } from '@/shared/api/parse.api';
 import { usePlaces } from '@/shared/hooks/usePlaces';
 import React, { useState } from 'react';
@@ -77,7 +77,7 @@ export const AddPlacePage = () => {
 
       {error && <p className='text-red-500 text-center mt-2'>{error}</p>}
 
-      <PlaceModule inputPlace={{ ...parsedPlace, id: 0 }} onSave={handleSave} />
+      <PlacePage inputPlace={{ ...parsedPlace, id: 0 }} onSave={handleSave} />
     </div>
   );
 };
