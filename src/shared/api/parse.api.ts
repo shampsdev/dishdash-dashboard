@@ -1,8 +1,7 @@
 import { Place } from '@/interfaces/place.interface';
 import axios from 'axios';
 import { useSettingsStore } from '../stores/settings.store';
-
-const API_URL = 'https://dashboard.dishdash.ru';
+import { API_URL } from '../constants';
 
 export const parsePlace = async (url: string) => {
   const api_key = useSettingsStore.getState().api_key;

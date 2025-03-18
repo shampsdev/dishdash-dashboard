@@ -1,8 +1,7 @@
-import axios from "axios";
-import { Place } from "@/interfaces/place.interface";
-import { useSettingsStore } from "../stores/settings.store";
-
-const API_URL = 'https://dashboard.dishdash.ru';
+import axios from 'axios';
+import { Place } from '@/interfaces/place.interface';
+import { useSettingsStore } from '../stores/settings.store';
+import { API_URL } from '../constants';
 
 export const fetchPlaces = async (): Promise<Place[]> => {
   const api_key = useSettingsStore.getState().api_key;
