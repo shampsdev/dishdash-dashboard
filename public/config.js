@@ -1,3 +1,3 @@
 window.api = {
-  API_URL: 'https://api.dashboard.dev.dishdash.ru'
+  API_URL: 'https://dashboard.dev.dishdash.ru'
 };

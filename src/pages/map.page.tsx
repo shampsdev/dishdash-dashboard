@@ -34,12 +34,11 @@ export const MapPage = () => {
               latitude={place.location.lat}
             >
               <div className='relative group cursor-pointer'>
-                {/* <img
+                <img
                   className='h-[30px] w-[30px] rounded-full border-2'
                   src={place.images[0]}
                   alt={place.title}
-                /> */}
-                <div className='h-[10px] w-[10px] rounded-full bg-primary'></div>
+                />
                 <div className='invisible absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white group-hover:visible'>
                   {place.title}
                 </div>

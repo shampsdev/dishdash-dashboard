@@ -21,14 +21,24 @@ import { FileUploader } from 'react-drag-drop-files';
 import { Link2Icon } from '@radix-ui/react-icons';
 import { LocationPicker } from '@/components/location-picker';
 import toast from 'react-hot-toast';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
-export const PlacePage = ({
-  inputPlace,
-  onSave,
-}: {
+interface PlacePageProps {
   inputPlace: Place;
-  onSave: (place: Place) => void;
-}) => {
+  onSave?: (place: Place) => void;
+  onDelete?: (place: Place) => void;
+}
+
+export const PlacePage = ({ inputPlace, onSave, onDelete }: PlacePageProps) => {
   const [place, setPlace] = useState<Place>(inputPlace);
 
   useEffect(() => {
@@ -124,7 +134,7 @@ export const PlacePage = ({
     place.location.lon = Number(place.location.lon);
     place.location.lat = Number(place.location.lat);
     place.priceAvg = Number(place.priceAvg);
-    onSave(place);
+    if (onSave !== undefined) onSave(place);
   }, [place, onSave]);
 
   const handleDragEnd = (result: DropResult) => {
@@ -136,6 +146,10 @@ export const PlacePage = ({
 
     setPlace((prev) => ({ ...prev, images: reorderedImages }));
   };
+
+  const handleDelete = useCallback(() => {
+    if (onDelete !== undefined) onDelete(place);
+  }, [place, onDelete]);
 
   return place !== null ? (
     <form className='p-5 flex gap-5 flex-col w-full overflow-scroll no-scrollbar'>
@@ -286,7 +300,39 @@ export const PlacePage = ({
           </div>
         </div>
       </div>
-      <div className='flex justify-end'>
+      <div className='flex justify-end gap-5'>
+        {onDelete && (
+          <>
+            <Dialog>
+              <DialogTrigger>
+                <Button type='button' variant='outline'>
+                  Delete
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    your account and remove your data from our servers.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <DialogClose>
+                    <Button
+                      variant='destructive'
+                      type='button'
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
+
         <Button type='button' onClick={handleSave}>
           Save
         </Button>

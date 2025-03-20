@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 export const DashboardPage = () => {
   const { id } = useParams<{ id: string }>(); //placeId
-  const { data, updatePlace } = usePlaces();
+  const { data, updatePlace, deletePlace } = usePlaces();
 
   const [place, setPlace] = useState<Place | null>(null);
 
@@ -20,8 +20,12 @@ export const DashboardPage = () => {
     toast.success('Place updated');
   };
 
+  const handleDelete = (place: Place) => {
+    deletePlace(place);
+  }
+
   return place !== null ? (
-    <PlacePage onSave={handleSave} inputPlace={place} />
+    <PlacePage onSave={handleSave} onDelete={handleDelete} inputPlace={place} />
   ) : (
     <></>
   );
