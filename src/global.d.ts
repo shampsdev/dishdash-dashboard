@@ -1,5 +1,5 @@
 interface Window {
   api: {
-    API_URL: string | undefined;
+    API_URL: string;
   };
 }

@@ -1,50 +1,35 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import './index.css';
-import 'leaflet/dist/leaflet.css';
-import { Sidebar } from './components/sidebar';
-import { TagsPage } from './pages/tags.page';
-import { MapPage } from './pages/map.page';
-import { Toaster } from 'react-hot-toast';
-import { SettingsPage } from './pages/settings.page';
-import DashboardSidebar from './modules/dashboard-sidebar.module';
-import { DashboardPage } from './pages/dashboard/dashboard.page';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AddPlacePage } from './pages/add-place.page';
-import { DarkModeProvider } from './shared/providers/dark-mode.provider';
-
-const queryClient = new QueryClient();
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
 
 function App() {
+  const [count, setCount] = useState(0)
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <DarkModeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path={'/'} element={<Sidebar />}>
-              <Route path='dashboard' element={<DashboardSidebar />}>
-                <Route path=':id' element={<DashboardPage />} />
-              </Route>
-              <Route path='tags' element={<TagsPage />} />
-              <Route path='map' element={<MapPage />} />
-              <Route path='add-place' element={<AddPlacePage />} />
-              <Route path='settings' element={<SettingsPage />} />
-            </Route>
-          </Routes>
-          <Toaster
-            toastOptions={{
-              position: 'top-right',
-              className: 'bg-background',
-              icon: null,
-              iconTheme: {
-                primary: 'black',
-                secondary: 'white',
-              },
-            }}
-          />
-        </BrowserRouter>
-      </DarkModeProvider>
-    </QueryClientProvider>
-  );
+    <>
+      <div>
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
+  )
 }
 
-export default App;
+export default App
