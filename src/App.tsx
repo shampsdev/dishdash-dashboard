@@ -5,11 +5,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Login from './pages/Login';
 import TagsPage from './pages/TagsPage';
+import StoriesPage from './pages/StoriesPage';
 
 // Placeholder components for the main sections
 const Places = () => <div className="p-4 text-white">Places Page</div>;
 const Collections = () => <div className="p-4 text-white">Collections Page</div>;
-const Stories = () => <div className="p-4 text-white">Stories Page</div>;
 
 const App: React.FC = () => {
   return (
@@ -77,7 +77,7 @@ const App: React.FC = () => {
                   <>
                     <Header />
                     <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                      <Stories />
+                      <StoriesPage />
                     </main>
                   </>
                 </ProtectedRoute>
