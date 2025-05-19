@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { setupAxiosInterceptors } from '../services/api';
 
 interface AuthContextType {
   token: string | null;
@@ -17,6 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setToken = (newToken: string) => {
     localStorage.setItem('token', newToken);
     setTokenState(newToken);
+    setupAxiosInterceptors(newToken);
   };
 
   const logout = () => {
@@ -32,14 +34,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      setupAxiosInterceptors(token);
+
       try {
-        const response = await axios.get('/places/tag', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const response = await axios.get('/places/tag');
         setIsAuthenticated(response.status === 200);
-      } catch (error) {
+      } catch {
         setIsAuthenticated(false);
         setTokenState(null);
         localStorage.removeItem('token');
