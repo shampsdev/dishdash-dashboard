@@ -20,6 +20,9 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
         },
+        gray: {
+          750: '#374151', // Custom color between gray-700 and gray-800
+        }
       },
     },
   },

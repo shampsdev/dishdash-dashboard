@@ -10,11 +10,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   @apply bg-gray-900 text-white;
+  overflow-x: hidden;
 }
 
-/* Custom scrollbar styles */
+/* Custom scrollbar styles - enhanced for better visibility */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -32,9 +34,43 @@ body {
   @apply bg-gray-500;
 }
 
+.custom-scrollbar::-webkit-scrollbar-corner {
+  @apply bg-gray-800;
+}
+
+/* For Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #1f2937;
+}
+
+/* Global scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-gray-600;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Make sure overflowing elements show scrollbar */
+.overflow-y-auto, .overflow-x-auto, .overflow-auto {
+  @apply custom-scrollbar;
 }
 
 :root {

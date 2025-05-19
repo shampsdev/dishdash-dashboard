@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_URL } from '../shared/constants';
 import type { Tag } from '../types/tag';
 import type { Story, StoryFilter, StoryPatch } from '../types/story';
+import type { Place, PlaceFilter, PlacePatch } from '../types/place';
 
 // Configure axios defaults
 axios.defaults.baseURL = `${API_URL}/api/v1`;
@@ -96,5 +97,54 @@ export const updateStory = async (storyData: StoryPatch) => {
 export const deleteStory = async (id: string) => {
   if (!id) throw new Error("Story ID is required");
   const response = await axios.delete(`/stories/id/${id}`);
+  return response.data;
+};
+
+// Places API calls
+export const fetchPlaces = async (filter: PlaceFilter = {}) => {
+  const response = await axios.post('/places/filter', filter);
+  return response.data;
+};
+
+export const fetchPlaceById = async (id: number) => {
+  if (!id) throw new Error("Place ID is required");
+  const response = await axios.get(`/places/id/${id}`);
+  return response.data;
+};
+
+export const createPlace = async (placeData: Place) => {
+  try {
+    console.log("Creating place with data:", JSON.stringify(placeData));
+    const response = await axios.post('/places', placeData);
+    console.log("Place created successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to create place:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Server response:", error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const updatePlace = async (placeData: PlacePatch) => {
+  if (!placeData.id) throw new Error("Place ID is required for updates");
+  try {
+    console.log("Updating place with data:", JSON.stringify(placeData));
+    const response = await axios.patch('/places', placeData);
+    console.log("Place updated successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update place:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Server response:", error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const deletePlace = async (id: number) => {
+  if (!id) throw new Error("Place ID is required");
+  const response = await axios.delete(`/places/id/${id}`);
   return response.data;
 }; 
