@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Place, PlacePatch } from '../../types/place';
 import TagsMultiSelect from '../tags/TagsMultiSelect';
-import { uploadImageByUrl, uploadImageByFile, updatePlace } from '../../services/api';
+import { uploadImageByUrl, uploadImageByFile, updatePlace, parseUrlForPlace } from '../../services/api';
 
 interface PlaceFormProps {  
   place?: Place | null;  
@@ -40,6 +40,9 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
   
   // Form validation
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // URL parsing state
+  const [isParsingUrl, setIsParsingUrl] = useState(false);
   
   // Initialize form with place data if editing
   useEffect(() => {
@@ -286,6 +289,47 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
     setIsDraggingOver(null);
   };
 
+  // Handle URL parsing
+  const handleParseUrl = async () => {
+    if (!url.trim()) {
+      setErrors({ ...errors, url: 'URL is required for parsing' });
+      return;
+    }
+
+    setIsParsingUrl(true);
+    setErrors({});
+
+    try {
+      const parsedData = await parseUrlForPlace(url);
+      
+      // Update form fields with the parsed data
+      if (parsedData.title) setTitle(parsedData.title);
+      if (parsedData.description) setDescription(parsedData.description);
+      if (parsedData.address) setAddress(parsedData.address);
+      if (parsedData.url) setUrl(parsedData.url);
+      if (parsedData.source) setSource(parsedData.source);
+      
+      // Update location if available
+      if (parsedData.location) {
+        setLocation({
+          lat: parsedData.location.lat.toString(),
+          lon: parsedData.location.lon.toString()
+        });
+      }
+      
+      // Add images if available (they will be added to pending images)
+      if (parsedData.images && parsedData.images.length > 0) {
+        setPendingImageUrls([...pendingImageUrls, ...parsedData.images]);
+      }
+      
+    } catch (error) {
+      console.error('Error parsing URL:', error);
+      setErrors({ ...errors, url: 'Failed to parse URL. Please check if the URL is valid.' });
+    } finally {
+      setIsParsingUrl(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {errors.submit && (
@@ -466,23 +510,6 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
           </div>
           
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-gray-300">
-              URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              id="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className={`mt-1 block w-full rounded-md bg-gray-700 border ${
-                errors.url ? 'border-red-500' : 'border-gray-600'
-              } text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="https://example.com"
-            />
-            {errors.url && <p className="mt-1 text-sm text-red-500">{errors.url}</p>}
-          </div>
-          
-          <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-300">
               Address
             </label>
@@ -576,6 +603,37 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
         {/* Right column - Advanced Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-white">Advanced Settings</h3>
+          
+          <div>
+            <label htmlFor="url" className="block text-sm font-medium text-gray-300">
+              URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              id="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className={`mt-1 block w-full rounded-md bg-gray-700 border ${
+                errors.url ? 'border-red-500' : 'border-gray-600'
+              } text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              placeholder="https://example.com"
+            />
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleParseUrl}
+                className={`px-3 py-2 ${
+                  isParsingUrl 
+                    ? 'bg-gray-600 cursor-wait' 
+                    : 'bg-blue-600 hover:bg-blue-500'
+                } text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors whitespace-nowrap`}
+                disabled={isParsingUrl || !url.trim()}
+              >
+                {isParsingUrl ? 'Parsing...' : 'Parse URL'}
+              </button>
+            </div>
+            {errors.url && <p className="mt-1 text-sm text-red-500">{errors.url}</p>}
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>

@@ -30,6 +30,20 @@ if (token) {
   setupAxiosInterceptors(token);
 }
 
+// URL parsing for place data
+export const parseUrlForPlace = async (url: string): Promise<Place> => {
+  try {
+    const response = await axios.post('/places/parse', { url });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to parse URL:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Server response:', error.response.data);
+    }
+    throw error;
+  }
+};
+
 // Image upload API calls
 export const uploadImageByUrl = async (url: string, placeId?: number) => {
   const directory = placeId ? `place/${placeId}` : 'place/temp';
