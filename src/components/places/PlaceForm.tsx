@@ -34,6 +34,10 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Drag and drop states
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState<number | null>(null);
+  
   // Form validation
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -107,6 +111,11 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
     setIsUploading(true);
     
     try {
+      // Ensure lat/lon are parsed with decimal points correctly
+      // Replace commas with points if needed
+      const latValue = location.lat.replace(',', '.');
+      const lonValue = location.lon.replace(',', '.');
+      
       // Convert string values to numbers for submission
       const placeData: Place | PlacePatch = {
         title,
@@ -116,12 +125,12 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
         source,
         images, // Existing images only, new ones will be uploaded after place creation
         location: {
-          lat: parseFloat(location.lat) || 0,
-          lon: parseFloat(location.lon) || 0
+          lat: parseFloat(latValue) || 0,
+          lon: parseFloat(lonValue) || 0
         },
         priceAvg: parseInt(priceAvg) || 0,
-        boost: parseFloat(boost) || 0,
-        boostRadius: parseFloat(boostRadius) || 0,
+        boost: parseFloat(boost.replace(',', '.')) || 0,
+        boostRadius: parseFloat(boostRadius.replace(',', '.')) || 0,
         tags
       };
 
@@ -219,17 +228,225 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
   };
 
   const handleLocationChange = (field: keyof typeof location, value: string) => {
+    // Replace commas with points for decimal numbers
+    const formattedValue = value.replace(',', '.');
     setLocation({
       ...location,
-      [field]: value
+      [field]: formattedValue
     });
+  };
+  
+  // Drag and drop handlers for image reordering
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    setDraggedImageIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    // Set the drag image to be the image element
+    const dragImage = e.currentTarget.querySelector('img');
+    if (dragImage) {
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+    }
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    if (draggedImageIndex === null || draggedImageIndex === index) return;
+    setIsDraggingOver(index);
+  };
+  
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+  
+  const handleDragLeave = () => {
+    setIsDraggingOver(null);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedImageIndex === null || draggedImageIndex === targetIndex) return;
+    
+    // Reorder the images array
+    const newImages = [...images];
+    const draggedImage = newImages[draggedImageIndex];
+    
+    // Remove the dragged image from its original position
+    newImages.splice(draggedImageIndex, 1);
+    
+    // Insert it at the target position
+    newImages.splice(targetIndex, 0, draggedImage);
+    
+    // Update state
+    setImages(newImages);
+    setDraggedImageIndex(null);
+    setIsDraggingOver(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedImageIndex(null);
+    setIsDraggingOver(null);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-gray-800 p-6 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {errors.submit && (
+        <div className="bg-red-900/30 border border-red-500/50 text-red-400 p-2 rounded-md">
+          {errors.submit}
+        </div>
+      )}
+
+      {/* Images Gallery at the top */}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-3">
+          <h3 className="text-lg font-medium text-white">Images</h3>
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* URL Image Upload */}
+            <div className="flex space-x-2 w-full sm:w-auto">
+              <input
+                type="url"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Add image by URL"
+                className="flex-1 sm:w-64 rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isUploading}
+              />
+              <button
+                type="button"
+                onClick={handleAddPendingImageUrl}
+                className={`px-3 py-2 ${isUploading ? 'bg-gray-600' : 'bg-blue-600 hover:bg-blue-500'} text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
+                disabled={isUploading || !newImageUrl.trim()}
+              >
+                Add URL
+              </button>
+            </div>
+            
+            {/* File Upload */}
+            <div className="w-full sm:w-auto">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAddPendingImageFile}
+                accept="image/*"
+                className="w-full sm:w-64 rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-2 file:py-1 file:px-3 file:border-0 file:rounded-md file:bg-blue-600 file:text-white file:cursor-pointer"
+                disabled={isUploading}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Upload Progress Indicator - only shown during form submission */}
+        {isUploading && (
+          <div className="w-full bg-gray-700 rounded-full h-2.5 mb-3">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        )}
+        
+        {/* Pending Images Row */}
+        {(pendingImageUrls.length > 0 || pendingImageFiles.length > 0) && (
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-300 mb-2">New Images (will be uploaded when saved)</h4>
+            <div className="flex overflow-x-auto space-x-3 pb-2 snap-x">
+              {pendingImageUrls.map((url, index) => (
+                <div key={`url-${index}`} className="relative group rounded-md overflow-hidden bg-gray-700 p-2 flex-shrink-0 w-36 sm:w-48 snap-start">
+                  <p className="text-xs text-gray-300 truncate">{url}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePendingUrl(index)}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {pendingImageFiles.map((file, index) => (
+                <div key={`file-${index}`} className="relative group rounded-md overflow-hidden bg-gray-700 p-2 flex-shrink-0 w-36 sm:w-48 snap-start">
+                  <p className="text-xs text-gray-300 truncate">{file.name}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePendingFile(index)}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Existing Images Horizontal Scroll with Drag & Drop */}
+        {images.length > 0 ? (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium text-gray-300">Existing Images</h4>
+              <div className="text-xs text-gray-400">Drag images to reorder</div>
+            </div>
+            <div className="flex overflow-x-auto space-x-3 pb-2 snap-x">
+              {images.map((image, index) => (
+                <div 
+                  key={index} 
+                  className={`
+                    relative group rounded-md overflow-hidden bg-gray-700 flex-shrink-0 snap-start cursor-move transition-all
+                    ${draggedImageIndex === index ? 'opacity-50 scale-95' : 'opacity-100'} 
+                    ${isDraggingOver === index ? 'border-2 border-blue-500' : ''}
+                  `}
+                  draggable="true"
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 z-10">
+                    <div className="text-white text-sm font-medium">
+                      Drag to reorder
+                    </div>
+                  </div>
+                  <div className="absolute top-0 left-0 bg-black bg-opacity-50 text-white px-2 py-1 text-xs">
+                    #{index + 1}
+                  </div>
+                  <img
+                    src={image}
+                    alt={`Image ${index + 1}`}
+                    className="w-48 sm:w-64 h-36 sm:h-48 object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null; // Prevent infinite error loop
+                      target.src = 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none"%3e%3crect width="40" height="40" fill="%234B5563"/%3e%3cpath d="M20 18C21.1046 18 22 17.1046 22 16C22 14.8954 21.1046 14 20 14C18.8954 14 18 14.8954 18 16C18 17.1046 18.8954 18 20 18Z" fill="%236B7280"/%3e%3cpath d="M14 26L18 22L20 24L24 20L26 22V26H14Z" fill="%236B7280"/%3e%3c/svg%3e';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-24 bg-gray-700 rounded-md border border-gray-600 border-dashed">
+            <p className="text-gray-400 text-sm">No images yet</p>
+          </div>
+        )}
+      </div>
+
+      {/* Form Fields */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left column - Basic Info */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <h3 className="text-lg font-medium text-white">Basic Information</h3>
           
           <div>
@@ -286,28 +503,46 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
               <div>
                 <label htmlFor="lat" className="block text-xs text-gray-400">Latitude</label>
                 <input
-                  type="number"
+                  type="text"
                   id="lat"
-                  step="any"
+                  inputMode="decimal"
                   value={location.lat}
                   onChange={(e) => handleLocationChange('lat', e.target.value)}
                   className="block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="0"
+                  placeholder="0.0"
                 />
               </div>
               <div>
                 <label htmlFor="lon" className="block text-xs text-gray-400">Longitude</label>
                 <input
-                  type="number"
+                  type="text"
                   id="lon"
-                  step="any"
+                  inputMode="decimal"
                   value={location.lon}
                   onChange={(e) => handleLocationChange('lon', e.target.value)}
                   className="block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="0"
+                  placeholder="0.0"
                 />
               </div>
             </div>
+          </div>
+        </div>
+        
+        {/* Middle column - Additional Details */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-white">Additional Details</h3>
+          
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+              Full Description
+            </label>
+            <textarea
+              id="description"
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="mt-1 block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           
           <div>
@@ -338,22 +573,9 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
           </div>
         </div>
         
-        {/* Right column - Details and Images */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium text-white">Details & Images</h3>
-          
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-300">
-              Full Description
-            </label>
-            <textarea
-              id="description"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Right column - Advanced Settings */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-white">Advanced Settings</h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -361,13 +583,13 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
                 Boost
               </label>
               <input
-                type="number"
+                type="text"
                 id="boost"
-                step="0.1"
+                inputMode="decimal"
                 value={boost}
-                onChange={(e) => setBoost(e.target.value)}
+                onChange={(e) => setBoost(e.target.value.replace(',', '.'))}
                 className="mt-1 block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0"
+                placeholder="0.0"
               />
             </div>
             <div>
@@ -375,137 +597,15 @@ const PlaceForm: React.FC<PlaceFormProps> = ({ place, onSubmit, onCancel, isCrea
                 Boost Radius
               </label>
               <input
-                type="number"
+                type="text"
                 id="boostRadius"
+                inputMode="decimal"
                 value={boostRadius}
-                onChange={(e) => setBoostRadius(e.target.value)}
+                onChange={(e) => setBoostRadius(e.target.value.replace(',', '.'))}
                 className="mt-1 block w-full rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0"
+                placeholder="0.0"
               />
             </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Images
-            </label>
-            
-            {errors.submit && (
-              <p className="mb-2 text-sm text-red-500">{errors.submit}</p>
-            )}
-            
-            {/* URL Image Upload */}
-            <div className="flex space-x-2 mb-3">
-              <input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="flex-1 rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isUploading}
-              />
-              <button
-                type="button"
-                onClick={handleAddPendingImageUrl}
-                className={`px-3 py-2 ${isUploading ? 'bg-gray-600' : 'bg-blue-600 hover:bg-blue-500'} text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
-                disabled={isUploading || !newImageUrl.trim()}
-              >
-                Add URL
-              </button>
-            </div>
-            
-            {/* File Upload */}
-            <div className="flex space-x-2 mb-3">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleAddPendingImageFile}
-                accept="image/*"
-                className="flex-1 rounded-md bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-2 file:py-1 file:px-3 file:border-0 file:rounded-md file:bg-blue-600 file:text-white file:cursor-pointer"
-                disabled={isUploading}
-              />
-            </div>
-            
-            {/* Upload Progress Indicator - only shown during form submission */}
-            {isUploading && (
-              <div className="w-full bg-gray-700 rounded-full h-2.5 mb-3">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            )}
-            
-            {/* Pending Images */}
-            {(pendingImageUrls.length > 0 || pendingImageFiles.length > 0) && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-300 mb-2">New Images (will be uploaded when saved)</h4>
-                <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto custom-scrollbar p-1">
-                  {pendingImageUrls.map((url, index) => (
-                    <div key={`url-${index}`} className="relative group rounded-md overflow-hidden bg-gray-700 p-2">
-                      <p className="text-xs text-gray-300 truncate">{url}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePendingUrl(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                  {pendingImageFiles.map((file, index) => (
-                    <div key={`file-${index}`} className="relative group rounded-md overflow-hidden bg-gray-700 p-2">
-                      <p className="text-xs text-gray-300 truncate">{file.name}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePendingFile(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Existing Images Gallery */}
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Existing Images</h4>
-            {images.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group rounded-md overflow-hidden bg-gray-700">
-                    <img
-                      src={image}
-                      alt={`Image ${index + 1}`}
-                      className="w-full h-24 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null; // Prevent infinite error loop
-                        target.src = 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none"%3e%3crect width="40" height="40" fill="%234B5563"/%3e%3cpath d="M20 18C21.1046 18 22 17.1046 22 16C22 14.8954 21.1046 14 20 14C18.8954 14 18 14.8954 18 16C18 17.1046 18.8954 18 20 18Z" fill="%236B7280"/%3e%3cpath d="M14 26L18 22L20 24L24 20L26 22V26H14Z" fill="%236B7280"/%3e%3c/svg%3e';
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-24 bg-gray-700 rounded-md border border-gray-600 border-dashed">
-                <p className="text-gray-400 text-sm">No images yet</p>
-              </div>
-            )}
           </div>
           
           <div>
