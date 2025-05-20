@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchPlaces, fetchPlaceById, createPlace, updatePlace, deletePlace } from '../services/api';
 import type { Place, PlaceFilter, PlacePatch } from '../types/place';
@@ -7,7 +7,6 @@ import PlaceForm from '../components/places/PlaceForm';
 const PlacesPage: React.FC = () => {
   const { token } = useAuth();
   const [places, setPlaces] = useState<Place[]>([]);
-  const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -15,74 +14,66 @@ const PlacesPage: React.FC = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState<number | null>(null);
   // Mobile view state to toggle between list and form
   const [showForm, setShowForm] = useState(false);
-  const [filter] = useState<PlaceFilter>({});
   
-  // Refs для неуправляемых инпутов
-  const searchTermRef = useRef<HTMLInputElement>(null);
-  const searchByIdRef = useRef<HTMLInputElement>(null);
-  
-  // Фильтры для отображения
-  const [searchFilters, setSearchFilters] = useState<{ term: string, id: string }>({
-    term: '',
-    id: ''
-  });
+  // Search and filter states
+  const [nameFilter, setNameFilter] = useState('');
+  const [idFilter, setIdFilter] = useState('');
+  const [filter, setFilter] = useState<PlaceFilter>({});
 
   useEffect(() => {
-    loadPlaces();
-  }, [token]);
-
-  // Функция для применения фильтров
-  const applyFilters = () => {
-    const term = searchTermRef.current?.value || '';
-    const id = searchByIdRef.current?.value || '';
-    
-    setSearchFilters({ term, id });
-    
-    // Фильтруем места
-    let result = [...places];
-    
-    // Фильтр по имени/адресу
-    if (term.trim()) {
-      const termLower = term.toLowerCase();
-      result = result.filter(place => 
-        place.title.toLowerCase().includes(termLower) || 
-        place.address.toLowerCase().includes(termLower)
-      );
-    }
-    
-    // Фильтр по ID
-    if (id.trim()) {
-      const idNumber = parseInt(id);
-      if (!isNaN(idNumber)) {
-        result = result.filter(place => place.id === idNumber);
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (idFilter) {
+          // Поиск по id
+          const id = parseInt(idFilter, 10);
+          if (!isNaN(id)) {
+            const place = await fetchPlaceById(id);
+            setPlaces(place ? [place] : []);
+          } else {
+            setPlaces([]);
+          }
+        } else {
+          // Обычный фильтр
+          const placesData = await fetchPlaces(filter);
+          const placesArray = Array.isArray(placesData) ? placesData.flat() : [];
+          setPlaces(placesArray);
+        }
+      } catch (err) {
+        console.error('Error loading places:', err);
+        setError('Failed to load places. Please try again later.');
+        setPlaces([]);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    load();
+  }, [token, filter, idFilter]);
+
+  // Update filter when search values change
+  useEffect(() => {
+    // Use a small delay to avoid too many API calls while typing
+    const timer = setTimeout(() => {
+      const newFilter: PlaceFilter = {};
+      
+      if (nameFilter) {
+        newFilter.search = nameFilter;
+      }
+      
+      if (idFilter) {
+        newFilter.id = parseInt(idFilter, 10);
+      }
+      
+      setFilter(newFilter);
+    }, 500);
     
-    setFilteredPlaces(result);
-  };
+    return () => clearTimeout(timer);
+  }, [nameFilter, idFilter]);
 
-  // Функция для сброса фильтров
   const clearFilters = () => {
-    if (searchTermRef.current) searchTermRef.current.value = '';
-    if (searchByIdRef.current) searchByIdRef.current.value = '';
-    setSearchFilters({ term: '', id: '' });
-    setFilteredPlaces(places);
-  };
-
-  const loadPlaces = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const placesData = await fetchPlaces(filter);
-      const placesArray = Array.isArray(placesData) ? placesData.flat() : [];
-      setPlaces(placesArray);
-      setFilteredPlaces(placesArray);
-    } catch (err) {
-      console.error('Error loading places:', err);
-      setError('Failed to load places. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
+    setNameFilter('');
+    setIdFilter('');
   };
 
   const handleCreatePlace = async (placeData: Place | PlacePatch) => {
@@ -95,7 +86,9 @@ const PlacesPage: React.FC = () => {
         setError('Cannot create place: incomplete data');
         return;
       }
-      await loadPlaces();
+      setIdFilter('');
+      setNameFilter('');
+      setFilter({});
       setIsCreating(false);
       // Return to list view on mobile after creating
       setShowForm(false);
@@ -108,7 +101,9 @@ const PlacesPage: React.FC = () => {
   const handleUpdatePlace = async (placeData: PlacePatch) => {
     try {
       await updatePlace(placeData);
-      await loadPlaces();
+      setIdFilter('');
+      setNameFilter('');
+      setFilter({});
       // Keep the place selected after update, but refresh the selection
       if (selectedPlace && selectedPlace.id) {
         const updatedPlace = await fetchPlaceById(selectedPlace.id);
@@ -125,7 +120,9 @@ const PlacesPage: React.FC = () => {
   const handleDeletePlace = async (id: number) => {
     try {
       await deletePlace(id);
-      await loadPlaces();
+      setIdFilter('');
+      setNameFilter('');
+      setFilter({});
       if (selectedPlace?.id === id) {
         setSelectedPlace(null);
       }
@@ -210,89 +207,19 @@ const PlacesPage: React.FC = () => {
         </button>
       </div>
       
-      {/* Search filters */}
-      <div className="p-3 bg-gray-750 border-b border-gray-700">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="searchTerm" className="block text-xs font-medium text-gray-400 mb-1">
-              Search by Name/Address
-            </label>
-            <input
-              type="text"
-              id="searchTerm"
-              ref={searchTermRef}
-              defaultValue={searchFilters.term}
-              placeholder="Search places..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  applyFilters();
-                }
-              }}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="searchById" className="block text-xs font-medium text-gray-400 mb-1">
-              Search by ID
-            </label>
-            <input
-              type="number"
-              id="searchById"
-              ref={searchByIdRef}
-              defaultValue={searchFilters.id}
-              placeholder="Place ID"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  applyFilters();
-                }
-              }}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        
-        <div className="mt-2 flex justify-between items-center">
-          <div className="flex space-x-2">
-            <button
-              onClick={clearFilters}
-              className="text-xs text-gray-400 hover:text-white flex items-center"
-            >
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Clear filters
-            </button>
-            <button
-              onClick={applyFilters}
-              className="text-xs text-blue-400 hover:text-blue-300 flex items-center"
-            >
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Apply filters
-            </button>
-          </div>
-          <span className="text-xs text-gray-400">
-            {filteredPlaces.length} of {places.length} places
-          </span>
-        </div>
-      </div>
-      
       <div className="flex-1 overflow-y-auto p-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 300px)' }}>
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-blue-500 border-blue-500 border-opacity-25"></div>
             <p className="mt-2 text-gray-300">Loading places...</p>
           </div>
-        ) : filteredPlaces.length === 0 ? (
+        ) : places.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400">
-              {places.length === 0 ? 'No places found' : 'No places match your search filters'}
-            </p>
+            <p className="text-gray-400">No places found</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredPlaces.map((place) => (
+            {places.map((place) => (
               <div
                 key={place.id}
                 onClick={() => selectPlace(place)}
@@ -422,6 +349,36 @@ const PlacesPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full p-4 overflow-hidden">
       <h1 className="text-2xl font-bold text-white mb-4">Places Dashboard</h1>
+      
+      {/* Фильтры поиска */}
+      <div className="mb-4 flex flex-col md:flex-row md:items-end gap-2 md:gap-4">
+        <div className="flex-1">
+          <label className="block text-xs text-gray-400 mb-1">Search by name</label>
+          <input
+            type="text"
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
+            placeholder="Enter place name"
+            className="w-full px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-white"
+          />
+        </div>
+        <div className="w-40">
+          <label className="block text-xs text-gray-400 mb-1">Search by ID</label>
+          <input
+            type="number"
+            value={idFilter}
+            onChange={(e) => setIdFilter(e.target.value)}
+            placeholder="Enter place ID"
+            className="w-full px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-white"
+          />
+        </div>
+        <button 
+          onClick={clearFilters} 
+          className="h-9 px-4 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-500 mt-5 md:mt-0"
+        >
+          Reset
+        </button>
+      </div>
       
       {/* Desktop view - Side by side */}
       <div className="hidden md:flex space-x-4 flex-1 overflow-hidden">

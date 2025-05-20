@@ -25,6 +25,7 @@ export interface Place {
 export interface PlaceFilter {
   search?: string;
   tags?: string[];
+  id?: number;
 }
 
 export interface PlacePatch {
