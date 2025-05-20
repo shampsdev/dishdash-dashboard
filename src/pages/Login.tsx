@@ -8,26 +8,17 @@ const Login: React.FC = () => {
   const { setToken: setAuthToken } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    try {
-      const response = await fetch('/places/tag', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setAuthToken(token);
-        navigate('/places');
-      } else {
-        setError('Invalid token');
-      }
-    } catch (err) {
-      setError('Failed to verify token');
+    
+    if (!token.trim()) {
+      setError('Please enter a token');
+      return;
     }
+    
+    // Store token without verification
+    setAuthToken(token);
+    navigate('/');
   };
 
   return (

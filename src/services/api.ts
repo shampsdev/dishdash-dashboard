@@ -9,6 +9,9 @@ axios.defaults.baseURL = `${API_URL}/api/v1`;
 
 // Add request interceptor to set the token
 export const setupAxiosInterceptors = (token: string) => {
+  // Clear previous interceptors to avoid duplicates
+  axios.interceptors.request.clear();
+  
   axios.interceptors.request.use(
     (config) => {
       config.headers['X-API-Token'] = token;
@@ -19,6 +22,12 @@ export const setupAxiosInterceptors = (token: string) => {
     }
   );
 };
+
+// Initialize with token from localStorage if available
+const token = localStorage.getItem('token');
+if (token) {
+  setupAxiosInterceptors(token);
+}
 
 // Tag API calls
 export const fetchTags = async () => {

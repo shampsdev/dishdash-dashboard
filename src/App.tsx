@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import TagsPage from './pages/TagsPage';
 import StoriesPage from './pages/StoriesPage';
 import PlacesPage from './pages/PlacesPage';
+import Dashboard from './pages/Dashboard';
 
 // Placeholder components for the main sections
 const Collections = () => <div className="p-4 text-white">Collections Page</div>;
@@ -25,7 +26,7 @@ const App: React.FC = () => {
                   <>
                     <Header />
                     <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                      <Navigate to="/places" replace />
+                      <Dashboard />
                     </main>
                   </>
                 </ProtectedRoute>

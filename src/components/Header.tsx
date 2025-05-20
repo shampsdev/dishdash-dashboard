@@ -8,6 +8,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigation = [
+    { name: 'Dashboard', href: '/' },
     { name: 'Places', href: '/places' },
     { name: 'Collections', href: '/collections' },
     { name: 'Tags', href: '/tags' },
