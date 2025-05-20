@@ -7,10 +7,8 @@ import Login from './pages/Login';
 import TagsPage from './pages/TagsPage';
 import StoriesPage from './pages/StoriesPage';
 import PlacesPage from './pages/PlacesPage';
+import CollectionsPage from './pages/CollectionsPage';
 import Dashboard from './pages/Dashboard';
-
-// Placeholder components for the main sections
-const Collections = () => <div className="p-4 text-white">Collections Page</div>;
 
 const App: React.FC = () => {
   return (
@@ -51,8 +49,8 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <>
                     <Header />
-                    <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                      <Collections />
+                    <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 h-screen">
+                      <CollectionsPage />
                     </main>
                   </>
                 </ProtectedRoute>

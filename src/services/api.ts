@@ -3,6 +3,7 @@ import { API_URL } from '../shared/constants';
 import type { Tag } from '../types/tag';
 import type { Story, StoryFilter, StoryPatch } from '../types/story';
 import type { Place, PlaceFilter, PlacePatch } from '../types/place';
+import type { Collection, CollectionFilter, CollectionPatch } from '../types/collection';
 
 // Configure axios defaults
 axios.defaults.baseURL = `${API_URL}/api/v1`;
@@ -80,6 +81,55 @@ export const updateTag = async (id: number, formData: FormData) => {
 
 export const deleteTag = async (id: number) => {
   const response = await axios.delete(`/places/tag/id/${id}`);
+  return response.data;
+};
+
+// Collections API calls
+export const fetchCollections = async (filter: CollectionFilter = {}) => {
+  const response = await axios.post('/collections/filter', filter);
+  return response.data;
+};
+
+export const fetchCollectionById = async (id: string) => {
+  if (!id) throw new Error("Collection ID is required");
+  const response = await axios.get(`/collections/id/${id}`);
+  return response.data;
+};
+
+export const createCollection = async (collectionData: Collection) => {
+  try {
+    console.log("Creating collection with data:", JSON.stringify(collectionData));
+    const response = await axios.post('/collections', collectionData);
+    console.log("Collection created successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to create collection:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Server response:", error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const updateCollection = async (collectionData: CollectionPatch) => {
+  if (!collectionData.id) throw new Error("Collection ID is required for updates");
+  try {
+    console.log("Updating collection with data:", JSON.stringify(collectionData));
+    const response = await axios.patch('/collections', collectionData);
+    console.log("Collection updated successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update collection:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("Server response:", error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const deleteCollection = async (id: string) => {
+  if (!id) throw new Error("Collection ID is required");
+  const response = await axios.delete(`/collections/id/${id}`);
   return response.data;
 };
 
