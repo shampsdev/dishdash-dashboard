@@ -29,6 +29,29 @@ if (token) {
   setupAxiosInterceptors(token);
 }
 
+// Image upload API calls
+export const uploadImageByUrl = async (url: string, placeId?: number) => {
+  const directory = placeId ? `place/${placeId}` : 'place/temp';
+  const response = await axios.post('/images/upload/by_url', {
+    url,
+    directory
+  });
+  return response.data.url;
+};
+
+export const uploadImageByFile = async (file: File, placeId?: number) => {
+  const directory = placeId ? `place/${placeId}` : 'place/temp';
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await axios.post(`/images/upload/by_file?dir=${directory}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data.url;
+};
+
 // Tag API calls
 export const fetchTags = async () => {
   const response = await axios.get('/places/tag');

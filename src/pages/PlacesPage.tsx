@@ -76,44 +76,56 @@ const PlacesPage: React.FC = () => {
     setIdFilter('');
   };
 
-  const handleCreatePlace = async (placeData: Place | PlacePatch) => {
+  const handleCreatePlace = async (placeData: Place | PlacePatch): Promise<Place | null> => {
     try {
       // Ensure we're using a complete Place object for creation
       if ('priceAvg' in placeData) {
-        await createPlace(placeData as Place);
+        const createdPlace = await createPlace(placeData as Place);
+        
+        // Refresh place list
+        setIdFilter('');
+        setNameFilter('');
+        setFilter({});
+        setIsCreating(false);
+        // Return to list view on mobile after creating
+        setShowForm(false);
+        
+        return createdPlace;
       } else {
         console.error('Cannot create place: incomplete data');
         setError('Cannot create place: incomplete data');
-        return;
+        return null;
       }
-      setIdFilter('');
-      setNameFilter('');
-      setFilter({});
-      setIsCreating(false);
-      // Return to list view on mobile after creating
-      setShowForm(false);
     } catch (err) {
       console.error('Error creating place:', err);
       setError('Failed to create place. Please try again.');
+      return null;
     }
   };
 
-  const handleUpdatePlace = async (placeData: PlacePatch) => {
+  const handleUpdatePlace = async (placeData: PlacePatch): Promise<Place | null> => {
     try {
-      await updatePlace(placeData);
+      const updatedPlace = await updatePlace(placeData);
+      
+      // Refresh place list
       setIdFilter('');
       setNameFilter('');
       setFilter({});
+      
       // Keep the place selected after update, but refresh the selection
       if (selectedPlace && selectedPlace.id) {
-        const updatedPlace = await fetchPlaceById(selectedPlace.id);
-        setSelectedPlace(updatedPlace);
+        const refreshedPlace = await fetchPlaceById(selectedPlace.id);
+        setSelectedPlace(refreshedPlace);
       }
+      
       // Return to list view on mobile after updating
       setShowForm(false);
+      
+      return updatedPlace;
     } catch (err) {
       console.error('Error updating place:', err);
       setError('Failed to update place. Please try again.');
+      return null;
     }
   };
 
